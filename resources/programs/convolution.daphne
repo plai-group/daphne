@@ -1,0 +1,245 @@
+;; FOPPL code for convolution example
+
+(defn const-vector [value size]
+  (vec (repeat size value)))
+
+(defn elem-add [tensor elem]
+  (if (vector? (first tensor))
+    (foreach (count tensor) [row tensor]
+             (elem-add row elem))
+    (foreach (count tensor) [v tensor] (+ v elem))))
+
+(defn dot-helper [t state a b]
+  (+ state
+     (* (get a t)
+        (get b t))))
+
+(defn dot [a b]
+  (loop (count a) 0 dot-helper a b))
+
+(defn row-mul [t state m v]
+  (conj state (dot (get m t) v)))
+
+(defn mmul [m v]
+  (loop (count m) [] row-mul m v))
+
+(defn row-helper [i sum a b]
+  (+ sum
+     (dot (get a i)
+          (get b i))))
+
+(defn inner-square [a b]
+  (loop (count a) 0 row-helper a b))
+
+(defn inner-cubic [a b]
+  (apply + (foreach (count a) [n (range (count a))]
+                    (inner-square (get a n) (get b n)))))
+
+(defn slice-square [d size i j]
+  (foreach size [k (range i (+ size i))]
+           (subvec (get d k) j (+ size j))))
+
+(defn slice-cubic [inputs size i j]
+  (foreach (count inputs) [input inputs]
+           (slice-square input size i j)))
+
+(defn sample-layer [hidden-layer]
+  (foreach (count hidden-layer) [hi hidden-layer]
+           (foreach (count hi) [hii hi]
+                    (foreach (count hii) [hiii hii]
+                             (sample (normal hiii 1) 0)))))
+
+(defn conv-helper [inputs kernel bias stride]
+  (let [ic        (count (first inputs))
+        size      (count (first kernel))
+        remainder (- size stride)
+        to-cover  (- ic remainder)
+        iters     (int (Math/floor (/ to-cover stride)))
+        #_output   #_ (foreach iters [i_ (range iters)]
+                         (foreach iters [j_ (range iters)]
+                                  (let [i (* i_ stride)
+                                        j (* j_ stride)]
+                                    (inner-cubic (slice-cubic inputs kw i j)
+                                                 kernel))))
+        output    (foreach iters [i (range iters)]
+                        (foreach iters [j (range iters)]
+                                 (inner-cubic #_(slice-cubic inputs kw i j)
+                                              (foreach (count inputs) [input inputs]
+                                                       (foreach size [k (range (* i stride)
+                                                                               (+ size (* i stride)))]
+                                                                (subvec (get input k)
+                                                                        (* j stride)
+                                                                        (+ size (* j stride))))
+                                                       #_(slice-square input kw i j))
+                                              kernel)
+                                 #_(let [i 
+                                       foo (* foo_ stride)]
+                                   #_[(slice-cubic inputs kw i foo) kernel]
+                                   )))]
+    output
+    #_(elem-add output bias)
+    #_(if (vector? (first output))
+      (foreach (count output) [row output]
+               (elem-add row bias))
+      (foreach (count output) [v output] (+ v bias)))))
+
+(defn conv2d [inputs kernels bias stride]
+  (foreach (count kernels) [ksi (range (count kernels))]
+           (conv-helper inputs (get kernels ksi) (get bias ksi) stride)))
+
+(defn conv2d [inputs kernels bias stride]
+  ;; TODO why not terminating without ksc binding?
+  (foreach (count kernels) [ksi (range (count kernels))]
+           ;; TODO inline with let is not working
+           (conv-helper inputs (get kernels ksi) (get bias ksi) stride)))
+
+
+;; TODO quasiquote Cons is not composing well with expected List type
+(let [a0  (sample (normal 0 1))
+      a1  (sample (normal 0 1))
+      a2  (sample (normal 0 1))
+      a3  (sample (normal 0 1))
+      a4  (sample (normal 0 1))
+      a5  (sample (normal 0 1))
+      a6  (sample (normal 0 1))
+      a7  (sample (normal 0 1))
+      a8  (sample (normal 0 1))
+      a9  (sample (normal 0 1))
+      a10 (sample (normal 0 1))
+      a11 (sample (normal 0 1))
+      a12 (sample (normal 0 1))
+      a13 (sample (normal 0 1))
+      a14 (sample (normal 0 1))
+      a15 (sample (normal 0 1))
+      a16 (sample (normal 0 1))
+      a17 (sample (normal 0 1))
+      a18 (sample (normal 0 1))
+      a19 (sample (normal 0 1))
+      a20 (sample (normal 0 1))
+      a21 (sample (normal 0 1))
+      a22 (sample (normal 0 1))
+      a23 (sample (normal 0 1))
+      a24 (sample (normal 0 1))
+      a25 (sample (normal 0 1))
+      a26 (sample (normal 0 1))
+      a27 (sample (normal 0 1))
+      a28 (sample (normal 0 1))
+      a29 (sample (normal 0 1))
+      a30 (sample (normal 0 1))
+      a31 (sample (normal 0 1))
+      a32 (sample (normal 0 1))
+      a33 (sample (normal 0 1))
+      a34 (sample (normal 0 1))
+      a35 (sample (normal 0 1))
+      a36 (sample (normal 0 1))
+      a37 (sample (normal 0 1))
+      a38 (sample (normal 0 1))
+      a39 (sample (normal 0 1))
+      a40 (sample (normal 0 1))
+      a41 (sample (normal 0 1))
+      a42 (sample (normal 0 1))
+      a43 (sample (normal 0 1))
+      a44 (sample (normal 0 1))
+      a45 (sample (normal 0 1))
+      a46 (sample (normal 0 1))
+      a47 (sample (normal 0 1))
+      a48 (sample (normal 0 1))
+      a49 (sample (normal 0 1))
+      a50 (sample (normal 0 1))
+      a51 (sample (normal 0 1))
+      a52 (sample (normal 0 1))
+      a53 (sample (normal 0 1))
+      a54 (sample (normal 0 1))
+      a55 (sample (normal 0 1))
+      a56 (sample (normal 0 1))
+      a57 (sample (normal 0 1))
+      a58 (sample (normal 0 1))
+      a59 (sample (normal 0 1))
+      a60 (sample (normal 0 1))
+      a61 (sample (normal 0 1))
+      a62 (sample (normal 0 1))
+      a63 (sample (normal 0 1))
+      a64 (sample (normal 0 1))
+      a65 (sample (normal 0 1))
+      a66 (sample (normal 0 1))
+      a67 (sample (normal 0 1))
+      a68 (sample (normal 0 1))
+      a69 (sample (normal 0 1))
+      a70 (sample (normal 0 1))
+      a71 (sample (normal 0 1))
+      a72 (sample (normal 0 1))
+      a73 (sample (normal 0 1))
+      a74 (sample (normal 0 1))
+      a75 (sample (normal 0 1))
+      a76 (sample (normal 0 1))
+      a77 (sample (normal 0 1))
+      a78 (sample (normal 0 1))
+      a79 (sample (normal 0 1))
+      a80 (sample (normal 0 1))
+
+      a [[[a0 a1 a2 a3 a4 a5 a6 a7 a8]
+          [a9 a10 a11 a12 a13 a14 a15 a16 a17]
+          [a18 a19 a20 a21 a22 a23 a24 a25 a26]
+          [a27 a28 a29 a30 a31 a32 a33 a34 a35]
+          [a36 a37 a38 a39 a40 a41 a42 a43 a44]
+          [a45 a46 a47 a48 a49 a50 a51 a52 a53]
+          [a54 a55 a56 a57 a58 a59 a60 a61 a62]
+          [a63 a64 a65 a66 a67 a68 a69 a70 a71]
+          [a72 a73 a74 a75 a76 a77 a78 a79 a80]]]
+
+      ;; filter conditioning 
+      b0 (observe (normal 0 1) 1)
+      b1 (observe (normal 0 1) 1)
+      b2 (observe (normal 0 1) 1)
+      b3 (observe (normal 0 1) 1)
+      b4 (observe (normal 0 1) 1)
+      b5 (observe (normal 0 1) 1)
+      b6 (observe (normal 0 1) 1)
+      b7 (observe (normal 0 1) 1)
+      b8 (observe (normal 0 1) 1)
+
+      b   [[[[b0 b1 b2] [b3 b4 b5] [b6 b7 b8]]]]
+      res (conv2d a b [0] 2)
+
+      ;; output conditioning
+      res00 (get (get (get res 0) 0) 0)
+      res01 (get (get (get res 0) 0) 1)
+      res02 (get (get (get res 0) 0) 2)
+      res03 (get (get (get res 0) 0) 3)
+
+      res10 (get (get (get res 0) 1) 0)
+      res11 (get (get (get res 0) 1) 1)
+      res12 (get (get (get res 0) 1) 2)
+      res13 (get (get (get res 0) 1) 3)
+
+      res20 (get (get (get res 0) 2) 0)
+      res21 (get (get (get res 0) 2) 1)
+      res22 (get (get (get res 0) 2) 2)
+      res23 (get (get (get res 0) 2) 3)
+
+      res30 (get (get (get res 0) 3) 0)
+      res31 (get (get (get res 0) 3) 1)
+      res32 (get (get (get res 0) 3) 2)
+      res33 (get (get (get res 0) 3) 3)
+
+      ]
+  (observe (normal res00 1) 0)
+  (observe (normal res01 1) 0)
+  (observe (normal res02 1) 0)
+  (observe (normal res03 1) 0)
+
+  (observe (normal res10 1) 0)
+  (observe (normal res11 1) 0)
+  (observe (normal res12 1) 0)
+  (observe (normal res13 1) 0)
+
+  (observe (normal res20 1) 0)
+  (observe (normal res21 1) 0)
+  (observe (normal res22 1) 0)
+  (observe (normal res23 1) 0)
+
+  (observe (normal res30 1) 0)
+  (observe (normal res31 1) 0)
+  (observe (normal res32 1) 0)
+  (observe (normal res33 1) 0)
+  res)
