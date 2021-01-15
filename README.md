@@ -16,7 +16,7 @@ To run this compiler you need to have [leiningen](https://leiningen.org/) and a
 JVM for Java 8 or later installed. To see all the options provided by the compiler run:
 
 ~~~clojure
-lein run --help
+lein run graph --help
 ~~~
 
 in the directory where you have checked out this repository.
@@ -119,7 +119,7 @@ codebase. If you do not use our amortization setup you can pick the filename
 freely. You can compile `convolution.daphne` in the same way.
 
 
-Make sure that you have [hy-lang](https://hylang.com/) for Python 3 installed
+Make sure that you have [hy-lang](https://hylang.org/) for Python 3 installed
 and check for `hy2py` on your path. The Python dependencies are documented in
 `requirements.txt`.
 
