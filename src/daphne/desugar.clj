@@ -1,5 +1,6 @@
 (ns daphne.desugar
-  (:require [daphne.gensym :refer [*my-gensym*]]))
+  (:require [daphne.gensym :refer [*my-gensym*]]
+            [clojure.core.memoize :as memoize]))
 
 (defn dispatch-desugar
   [exp]
@@ -36,6 +37,8 @@
 
 (defmulti desugar dispatch-desugar)
 
+(def mem-desugar (memoize/lu desugar :lu/threshold 10000))
+
 (defmethod desugar :let
   [exp]
   (let [[_ bindings & body] exp]
@@ -43,11 +46,11 @@
        (let [[b v] f]
          (if f
            (do
-             (list 'let [b (desugar v)]
+             (list 'let [b (mem-desugar v)]
                    (expand-bindings r)))
            ((fn expand-body [[f & r]]
               (if-not (empty? r)
-                (list 'let [(*my-gensym* "dontcare") (desugar f)]
+                (list 'let [(*my-gensym* "dontcare") (mem-desugar f)]
                       (expand-body r))
                 (desugar f)))
             body))))
@@ -67,12 +70,9 @@
   [exp]
   (let [[_ c acc f & es] exp
         as (map (fn [_] (*my-gensym* "a")) es)]
-    #_(when-not (int? c)
-      (throw (ex-info "Cannot unroll loop for non-constant." {:type :unroll-error
-                                                              :expression c})))
     (if-not (int? c)
       exp
-      (desugar
+      (mem-desugar
        (list 'let (vec (interleave as es))
              (expand-loop 0 c acc f as))))))
 
@@ -80,49 +80,43 @@
 (defmethod desugar :foreach
   [exp]
   (let [[_ c bindings & body] exp
-        bindings (mapv desugar bindings)
-        body (map desugar body)]
-    #_(when-not (int? c)
-      (throw (ex-info "Cannot unroll loop for non-constant." {:type :unroll-error
-                                                              :expression c})))
+        bindings (mapv mem-desugar bindings)
+        body (map mem-desugar body)]
     (if-not (int? c)
       exp
-      (desugar
+      (mem-desugar
        (vec (for [i (range c)]
               (apply list
                      (concat
                       (list 'let
                             (vec (apply concat
                                         (for [[v e] (partition 2 bindings)]
-                                          [v (list 'nth e i)]))))
+                                          [v (list 'get e i)]))))
                       body))))))))
 
 
 (defmethod desugar :if
   [exp]
   (let [[_ cond then else] exp]
-    (list 'if (desugar cond)
-          (desugar then)
-          (desugar else))))
+    (list 'if (mem-desugar cond)
+          (mem-desugar then)
+          (mem-desugar else))))
 
 (defmethod desugar :map [exp]
   (into {} (map (fn [[k v]]
-                  [(desugar k)
-                   (desugar v)])
+                  [(mem-desugar k)
+                   (mem-desugar v)])
                 exp)))
 
 (defmethod desugar :list [exp]
-  (apply list (map #(desugar %) exp)))
+  (apply list (map #(mem-desugar %) exp)))
 
 (defmethod desugar :seq [exp]
-  (map #(desugar %) exp))
+  (map #(mem-desugar %) exp))
 
 (defmethod desugar :vector [exp]
-  (mapv #(desugar %) exp))
+  (mapv #(mem-desugar %) exp))
 
 (defmethod desugar :unrelated [exp]
   exp)
 
-
-
- 

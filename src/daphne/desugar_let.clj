@@ -1,5 +1,6 @@
 (ns daphne.desugar-let
-  (:require [daphne.gensym :refer [*my-gensym*]]))
+  (:require [daphne.gensym :refer [*my-gensym*]]
+            [clojure.core.memoize :as memoize]))
 
 (defn dispatch-desugar-let
   [exp]
@@ -24,6 +25,8 @@
 
 (defmulti desugar-let dispatch-desugar-let)
 
+(def mem-desugar-let (memoize/lu desugar-let :lu/threshold 10000))
+
 (defmethod desugar-let :let
   [exp]
   (let [[_ bindings & body] exp]
@@ -31,31 +34,31 @@
        (let [[b v] f]
          (if f
            (do
-             (list 'let [b (desugar-let v)]
+             (list 'let [b (mem-desugar-let v)]
                    (expand-bindings r)))
            ((fn expand-body [[f & r]]
               (if-not (empty? r)
-                (list 'let [(*my-gensym* "dontcare") (desugar-let f)]
+                (list 'let [(*my-gensym* "dontcare") (mem-desugar-let f)]
                       (expand-body r))
-                (desugar-let f)))
+                (mem-desugar-let f)))
             body))))
      (partition 2 bindings))))
 
 
 (defmethod desugar-let :map [exp]
   (into {} (map (fn [[k v]]
-                  [(desugar-let k)
-                   (desugar-let v)])
+                  [(mem-desugar-let k)
+                   (mem-desugar-let v)])
                 exp)))
 
 (defmethod desugar-let :list [exp]
-  (apply list (map #(desugar-let %) exp)))
+  (apply list (map #(mem-desugar-let %) exp)))
 
 (defmethod desugar-let :seq [exp]
-  (map #(desugar-let %) exp))
+  (map #(mem-desugar-let %) exp))
 
 (defmethod desugar-let :vector [exp]
-  (mapv #(desugar-let %) exp))
+  (mapv #(mem-desugar-let %) exp))
 
 (defmethod desugar-let :unrelated [exp]
   exp)

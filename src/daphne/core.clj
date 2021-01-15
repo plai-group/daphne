@@ -2,9 +2,10 @@
   "This namespace contains an implementation of a FOPPL compiler following chapter
   3.1 of 'An Introduction to Probabilistic Programming' by van de Meent et al."
   (:require [clojure.set :as set]
-;;            [anglican.runtime :refer :all]
-            [daphne.desugar-let :refer [desugar-let]]
+            [anglican.runtime :refer :all]
+            [daphne.primitives :refer :all]
             [daphne.analyze :refer [analyze empty-env empty-graph]]))
+
 
 (defn invert-graph [G]
   (reduce (fn [acc m] (merge-with set/union acc m))
@@ -13,7 +14,7 @@
                 c children]
             {c #{p}})))
 
-(defn topo-sort [{:keys [V A P]}]
+(defn topo-sort [{:keys [V A]}]
   (let [terminals
         (loop [terminals []
                A A
@@ -27,7 +28,7 @@
                      V))))]
     terminals))
 
-(defn graph->instructions [[rho G E]]
+(defn graph->instructions [[_ G E]]
   (conj
    (vec
     (for [t (topo-sort G)]
@@ -36,7 +37,7 @@
 
 (defn eval-instructions [instructions]
   (reduce (fn [acc [s v]]
-            (binding [*ns* (find-ns 'foppl-compiler.core)]
+            (binding [*ns* (find-ns 'daphne.core)]
               (conj acc [s ((eval `(fn [{:syms ~(vec (take-nth 2 (apply concat acc)))}]
                                      ~v))
                             (into {} acc))])))
@@ -44,7 +45,7 @@
           instructions))
 
 (defn program->graph [p]
-  (reduce (fn [[rho G E] exp]
+  (reduce (fn [[rho _ _] exp]
             (analyze rho true exp))
           [empty-env empty-graph nil]
           p))
@@ -66,7 +67,7 @@
               (if (re-find #"observe\d+" (name sym))
                 (if (= (first v) 'if)
                   (let [[_ cond [_ dist _] _] v]
-                    (binding [*ns* (find-ns 'foppl-compiler.core)]
+                    (binding [*ns* (find-ns 'daphne.core)]
                       (if (eval (list 'let (vec (apply concat acc))
                                       cond))
                         (conj acc [sym (list 'sample* dist)])
@@ -77,50 +78,16 @@
           []
           instructions))
 
-
 (defn sample-from-joint [G]
   (-> G
      graph->instructions
      observes->samples
-     eval-instructions)) 
+     eval-instructions))
 
 (defn code->graph [code]
   (->> code
-       (map desugar-let)
-       #_(map partial-evaluation)
-       #_(map symbolic-simplify)
-       #_(map (fn [exp]
-              (try
-                (desugar exp)
-                (catch Exception _
-                  exp))))
-       #_(map desugar)
-       program->graph)
-  #_(let [fn-map (collect-top-level code)
-        main-code (list (last code))]
-    (loop [code main-code]
-      (let [res (->> code
-                     (map (partial inline-toplevel-functions fn-map))
-                     (map desugar-let)
-                     (map partial-evaluation)
-                     (map symbolic-simplify)
-                     (map (fn [exp]
-                            (try
-                              (desugar exp)
-                              (catch Exception _
-                                exp)))))]
-        (if (= res code)
-          (do
-            (prn "res" res)
-            (update (program->graph res) 0 merge fn-map))
-          (recur res))))))
+       program->graph))
 
 (defn count-graph [code]
   (let [[_ G _] (code->graph code)]
     [(count-vertices G) (count-edges G)]))
-
-
-
-
-
-

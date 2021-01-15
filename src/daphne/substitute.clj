@@ -50,7 +50,7 @@
 (defmethod substitute :vector [exp sym val]
   (mapv #(substitute % sym val) exp))
 
-(defmethod substitute :unrelated [exp sym val]
+(defmethod substitute :unrelated [exp _ _]
   exp)
 
 (defmethod substitute :let [exp sym val]
@@ -69,6 +69,3 @@
                           [k (substitute v sym val)])
                         (partition 2 bindings)))
            (map #(substitute % sym val) rest))))
-
-
- 
