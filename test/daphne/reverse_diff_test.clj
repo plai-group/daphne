@@ -135,7 +135,7 @@
                   (eval (apply reverse-diff* (rest code)))
                   values)
         rev-grad (bp 1.0)]
-    (prn #_code "Forward: " res " Grad: " rev-grad)
+    #_(prn #_code "Forward: " res " Grad: " rev-grad)
     (and (not (err? res (apply (eval code) values))) 
          (zero? (count (filter true? (map err? num-grad rev-grad)))))))
 

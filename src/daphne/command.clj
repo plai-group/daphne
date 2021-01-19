@@ -45,7 +45,7 @@
   (let [formats #{:json :edn :pretty-json}
         algorithms #{:hmc :metropolis-within-gibbs}]
     [["-f" "--format FORMAT" "Output format"
-      :default :json
+      :default :pretty-json
       :parse-fn keyword
       :validate [formats (str "Must be one of: " (str/join ", " formats))]]
      ["-s" "--source SOURCECODE" "Program source code, by default STDIN is used."
@@ -126,7 +126,18 @@
        (take (:num-samples opts))
        vec)))
 
-(defn calculate [action code opts]
+(defn- transform-vals [f m]
+  (->> m
+       (map (fn [[k v]] [k (f v)]))
+       (into {})))
+
+(defn- desugar-datastructures-graph [prog]
+  (let [[rho g return] prog]
+    [rho #_(transform-vals (comp desugar-datastructures desugar) rho)
+     (update-in g [:P] (partial transform-vals desugar-datastructures))
+     (desugar-datastructures return)]))
+
+(defn execute [action code opts]
   (when (pos? (:verbosity opts))
     (println "Executing" action " for:")
     (apply println code))
@@ -136,7 +147,7 @@
                               (swap! gensyms rest)
                               (symbol (str s f))))]
       (case action
-        :graph (program->graph code)
+        :graph (-> code program->graph desugar-datastructures-graph)
         :desugar (-> code desugar desugar-datastructures)
         :python-class (foppl->python code)
         :infer (infer code opts)))))
@@ -148,12 +159,12 @@
       (let [source (or (:source options)
                        (slurp (or (:input-file options) *in*)))
             code (read-all-exps source)
-            out' (calculate action code options)
+            out' (execute action code options)
             out (if (not (string? out'))
                   (case (:format options)
                     :json (json/json-str out')
                     :pretty-json (with-out-str (json/pprint out'))
-                    :edn  (pr out'))
+                    :edn  (pr-str out'))
                   out')]
         (when (pos? (:verbosity options))
           (println))
