@@ -133,7 +133,7 @@
 
 (defn- desugar-datastructures-graph [prog]
   (let [[rho g return] prog]
-    [rho #_(transform-vals (comp desugar-datastructures desugar) rho)
+    [(transform-vals (comp desugar-datastructures desugar) rho)
      (update-in g [:P] (partial transform-vals desugar-datastructures))
      (desugar-datastructures return)]))
 
