@@ -42,7 +42,7 @@
 
 (def cli-options
   ;; An option with a required argument
-  (let [formats #{:json :edn}
+  (let [formats #{:json :edn :pretty-json}
         algorithms #{:hmc :metropolis-within-gibbs}]
     [["-f" "--format FORMAT" "Output format"
       :default :json
@@ -152,6 +152,7 @@
             out (if (not (string? out'))
                   (case (:format options)
                     :json (json/json-str out')
+                    :pretty-json (with-out-str (json/pprint out'))
                     :edn  (pr out'))
                   out')]
         (when (pos? (:verbosity options))
