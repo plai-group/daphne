@@ -6,6 +6,10 @@
              (= (first exp) 'let))
         :let
 
+        (and (list? exp)
+             (= (first exp) 'fn))
+        :fn
+
         (map? exp)
         :map
 
@@ -32,6 +36,10 @@
                            [k (desugar-datastructures v)])
                          (partition 2 bindings)))
            (map desugar-datastructures body))))
+
+(defmethod desugar-datastructures :fn [exp]
+  (let [[_ args & body] exp]
+    (apply list 'fn args (map desugar-datastructures body))))
 
 (defmethod desugar-datastructures :map [exp]
   (conj 'dict
