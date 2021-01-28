@@ -10,6 +10,10 @@
              (= (first exp) 'fn))
         :fn
 
+        (and (list? exp)
+             (= (first exp) 'defn))
+        :defn
+
         (map? exp)
         :map
 
@@ -38,8 +42,12 @@
            (map desugar-datastructures body))))
 
 (defmethod desugar-datastructures :fn [exp]
-  (let [[_ args & body] exp]
-    (apply list 'fn args (map desugar-datastructures body))))
+  (let [[op args & body] exp]
+    (apply list op args (map desugar-datastructures body))))
+
+(defmethod desugar-datastructures :defn [exp]
+  (let [[op name args & body] exp]
+    (apply list op name args (map desugar-datastructures body))))
 
 (defmethod desugar-datastructures :map [exp]
   (conj 'dict
