@@ -50,11 +50,11 @@
     (apply list op name args (map desugar-datastructures body))))
 
 (defmethod desugar-datastructures :map [exp]
-  (conj 'dict
-        (map (fn [[k v]]
+  (conj (map (fn [[k v]]
                [(desugar-datastructures k)
                 (desugar-datastructures v)])
-             exp)))
+             exp)
+        'hash-map))
 
 (defmethod desugar-datastructures :list [exp]
   (apply list (map #(desugar-datastructures %) exp)))
