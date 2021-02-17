@@ -13,6 +13,7 @@
                 'vector vector
                 'subvec subvec
                 'get get
+                'put assoc
                 'append append
                 'count count
                 'concat concat
@@ -206,7 +207,3 @@
   exp)
 
 
-
-(comment
-  (symbolic-simplify '(sample (normal (observe (normal 0 1) 0) 2))) 
-  )
