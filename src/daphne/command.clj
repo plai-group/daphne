@@ -9,6 +9,7 @@
             [daphne.hy :refer [foppl->python]]
             [daphne.desugar :refer [desugar]]
             [daphne.desugar-datastructures :refer [desugar-datastructures]]
+            [daphne.desugar-hoppl :refer [desugar-hoppl-global]]
             [daphne.metropolis-within-gibbs :refer [metropolis-within-gibbs]]
             [daphne.hmc :refer [hmc]]
             [daphne.core :refer [program->graph]])
@@ -38,7 +39,7 @@
   (str "The following errors occurred while parsing your command:\n\n"
        (str/join \newline errors)))
 
-(def actions #{"graph" "desugar" "python-class" "infer"})
+(def actions #{"graph" "desugar" "desugar-hoppl" "python-class" "infer"})
 
 (def cli-options
   ;; An option with a required argument
@@ -149,6 +150,7 @@
       (case action
         :graph (-> code program->graph desugar-datastructures-graph)
         :desugar (-> code desugar desugar-datastructures)
+        :desugar-hoppl (-> code desugar-hoppl-global)
         :python-class (foppl->python code)
         :infer (infer code opts)))))
 
