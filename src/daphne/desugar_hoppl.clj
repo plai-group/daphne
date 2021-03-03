@@ -16,6 +16,10 @@
              (= (first exp) 'defn))
         :defn
 
+        (and (list? exp)
+             (= (first exp) 'loop))
+        :loop
+
         (map? exp)
         :map
 
@@ -40,7 +44,7 @@
        (let [[b v] f]
          (if f
            (list
-            (list 'fn [b]
+            (list 'fn (*my-gensym* "let") [b]
                   (expand-bindings r))
             (desugar-hoppl v))
            ((fn expand-body [[f & r]]
@@ -49,18 +53,14 @@
                       (expand-body r))
                 (desugar-hoppl f)))
             body))))
-     (partition 2 bindings)))
-  #_(let [[_ bindings & body] exp]
-    (let [[_ bindings' & body] exp
-          bindings             (partition 2 bindings')]
-      (apply list (apply list 'fn (mapv first bindings) body)
-             (mapv second bindings)))))
+     (partition 2 bindings))))
 
 (defmethod desugar-hoppl :fn [exp]
-  (let [[op args & body] exp]
-    (apply list op args (map desugar-hoppl body))))
-
-
+  (let [[op name args & body] exp]
+    (assert (= op 'fn))
+    (assert (symbol? name))
+    (assert (vector? args))
+    (apply list 'fn name args (map desugar-hoppl body))))
 
 (defmethod desugar-hoppl :map [exp]
   (conj (map (fn [[k v]]
@@ -87,15 +87,36 @@
 (defn desugar-defn [exp]
   (let [[op name args & body] exp]
     (assert (= op 'defn))
-    [name (apply list 'fn args body)]))
+    (assert (symbol? name))
+    (assert (vector? args))
+    [name (apply list 'fn name args body)]))
 
+;; not used atm. because of global let binding for defns
 (defmethod desugar-hoppl :defn [exp]
   (let [[op name args & body] exp]
     (apply list op name args (map desugar-hoppl body))))
 
 
+(defmethod desugar-hoppl :loop [exp]
+  (let [[_ c e f & es] exp
+        as (map (fn [_] (*my-gensym*)) es)]
+    (list 'let
+          (vec
+           (concat
+            ['bound c
+             'initial-value e]
+            (partition 2 (interleave as es))
+            ['g (list 'fn (*my-gensym* "loop") ['i 'w] (apply list f 'i 'w as))]
+            ))
+          (list 'loop-helper 0 'bound 'initial-value 'g))))
+
+(def preamble '[(defn loop-helper [i c v g]
+                  (if (= i c)
+                    v
+                    (loop-helper (+ i 1) c (g i v) g)))])
+
 (defn desugar-hoppl-global [code]
-  (let [defns (butlast code)
+  (let [defns (concat preamble (butlast code))
         main (last code)]
     (desugar-hoppl
      (list 'let (vec (mapcat desugar-defn defns))
@@ -109,5 +130,8 @@
   (eval (desugar-hoppl '(let [x 1 y 3] (+ x y 1)))) ;; => ((fn [x] (+ x 2)) 1)
 
   (eval (desugar-hoppl-global '[(defn add [a b] (+ a b)) (let [a (add 2 3)] (- a 1))]))
+
+  (eval (desugar-hoppl-global '[(loop 3 0 (fn [i c] (+ c 1)))]))
+
 
   )
