@@ -5,6 +5,7 @@
             [clojure.tools.cli :refer [parse-opts]]
             [clojure.java.io :as io]
             [clojure.data.json :as json]
+            [daphne.address-transformation :refer [address-trafo]]
             [daphne.gensym :refer [*my-gensym*]]
             [daphne.hy :refer [foppl->python]]
             [daphne.desugar :refer [desugar]]
@@ -150,7 +151,7 @@
       (case action
         :graph (-> code program->graph desugar-datastructures-graph)
         :desugar (-> code desugar desugar-datastructures)
-        :desugar-hoppl (-> code desugar-hoppl-global)
+        :desugar-hoppl (-> code desugar-hoppl-global (address-trafo 'alpha))
         :python-class (foppl->python code)
         :infer (infer code opts)))))
 
