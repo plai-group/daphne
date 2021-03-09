@@ -29,11 +29,11 @@
 ;; we do not know about primitives functions here and therefore also create new
 ;; symbols for those invocations
 (defmethod address-trafo :fn [exp alpha]
-  (let [[op name args & body] exp]
+  (let [[op #_name args & body] exp]
     (assert (= op 'fn))
-    (assert (symbol? name))
+    #_(assert (symbol? name))
     (assert (vector? args))
-    (apply list 'fn name (vec (concat [alpha] args))
+    (apply list 'fn #_name (vec (concat [alpha] args))
            (map #(address-trafo % alpha) body))))
 
 (defmethod address-trafo :map [exp alpha]

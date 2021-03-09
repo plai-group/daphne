@@ -20,6 +20,10 @@
              (= (first exp) 'loop))
         :loop
 
+        (and (list? exp)
+             (= (first exp) 'foreach))
+        :foreach
+
         (map? exp)
         :map
 
@@ -44,7 +48,7 @@
        (let [[b v] f]
          (if f
            (list
-            (list 'fn (*my-gensym* "let") [b]
+            (list 'fn #_(*my-gensym* "let") [b]
                   (expand-bindings r))
             (desugar-hoppl v))
            ((fn expand-body [[f & r]]
@@ -56,11 +60,11 @@
      (partition 2 bindings))))
 
 (defmethod desugar-hoppl :fn [exp]
-  (let [[op name args & body] exp]
+  (let [[op #_name args & body] exp]
     (assert (= op 'fn))
-    (assert (symbol? name))
+    #_(assert (symbol? name))
     (assert (vector? args))
-    (apply list 'fn name args (map desugar-hoppl body))))
+    (apply list 'fn #_name args (map desugar-hoppl body))))
 
 (defmethod desugar-hoppl :map [exp]
   (conj (map (fn [[k v]]
@@ -89,7 +93,7 @@
     (assert (= op 'defn))
     (assert (symbol? name))
     (assert (vector? args))
-    [name (apply list 'fn name args body)]))
+    [name (apply list 'fn #_name args body)]))
 
 ;; not used atm. because of global let binding for defns
 (defmethod desugar-hoppl :defn [exp]
@@ -106,11 +110,25 @@
             ['bound c
              'initial-value e]
             (partition 2 (interleave as es))
-            ['g (list 'fn (*my-gensym* "loop") ['i 'w] (apply list f 'i 'w as))]
+            ['g (list 'fn #_(*my-gensym* "loop") ['i 'w] (apply list f 'i 'w as))]
             ))
           (list 'loop-helper 0 'bound 'initial-value 'g))))
 
-(def preamble '[(defn loop-helper [i c v g]
+(comment
+  (defmethod desugar-hoppl :foreach [exp]
+    (let [[_ c e f & es] exp
+          as             (map (fn [_] (*my-gensym*)) es)]
+      (list 'let
+            (vec
+             (concat
+              ['bound c
+               'initial-value e]
+              (partition 2 (interleave as es))
+              ['g (list 'fn (*my-gensym* "loop") ['i 'w] (apply list f 'i 'w as))]
+              ))
+            (list 'loop-helper 0 'bound 'initial-value 'g)))))
+
+(def preamble '[#_(defn loop-helper [i c v g]
                   (if (= i c)
                     v
                     (loop-helper (+ i 1) c (g i v) g)))])
