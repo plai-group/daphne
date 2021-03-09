@@ -151,7 +151,9 @@
       (case action
         :graph (-> code program->graph desugar-datastructures-graph)
         :desugar (-> code desugar desugar-datastructures)
-        :desugar-hoppl (-> code desugar-hoppl-global (address-trafo 'alpha))
+        :desugar-hoppl (list
+                       'fn ['alpha]
+                       (-> code desugar-hoppl-global (address-trafo 'alpha)))
         :python-class (foppl->python code)
         :infer (infer code opts)))))
 

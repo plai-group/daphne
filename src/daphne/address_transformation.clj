@@ -9,6 +9,10 @@
              (= (first exp) 'fn))
         :fn
 
+        (and (list? exp)
+             (= (first exp) 'if))
+        :if
+
         (map? exp)
         :map
 
@@ -36,12 +40,14 @@
     (apply list 'fn #_name (vec (concat [alpha] args))
            (map #(address-trafo % alpha) body))))
 
+(defmethod address-trafo :if [exp alpha]
+  (doall (map #(address-trafo % alpha) exp)))
+
 (defmethod address-trafo :map [exp alpha]
-  (conj (map (fn [[k v]]
-               [(address-trafo k alpha)
-                (address-trafo v alpha)])
-             exp)
-        'hash-map))
+  (into {} (map (fn [[k v]]
+                  [(address-trafo k alpha)
+                   (address-trafo v alpha)])
+                exp)))
 
 (defmethod address-trafo :list [exp alpha]
   (let [[f & args] exp
@@ -55,7 +61,7 @@
 (defmethod address-trafo :vector [exp alpha]
   (apply list
          (conj
-          (map #(address-trafo % alpha) exp alpha)
+          (map #(address-trafo % alpha) exp)
           'vector)))
 
 (defmethod address-trafo :unrelated [exp alpha]
@@ -70,7 +76,7 @@
 (comment
   (address-trafo '(+ 1 2) []) ;; => (+ 1 2)
 
-  (address-trafo '((fn foo [x] (sample (normal (+ x 1) 1))) 2) 'alpha5)
+  (address-trafo '((fn [x] (sample (normal (+ x 1) 1))) 2) 'alpha5)
 
 
   (eval (address-trafo '(let [x 1 y 3] (+ x y 1)))) ;; => ((fn [x] (+ x 2)) 1)

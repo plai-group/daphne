@@ -12,8 +12,8 @@
                                    (let [f (first @gensyms)]
                                      (swap! gensyms rest)
                                      (symbol (str s f))))]
-             (address-trafo '((fn foo [x] (sample (normal (+ x 1) 1))) 2) 'alpha5))) 
-         '((fn foo [alpha5 x]
+             (address-trafo '((fn [x] (sample (normal (+ x 1) 1))) 2) 'alpha5)))
+         '((fn [alpha5 x]
              (sample
               (push-address alpha5 addr1)
               (normal
@@ -22,3 +22,18 @@
                1)))
            (push-address alpha5 addr0)
            2)))))
+
+
+(comment
+  (let [push-address (fn [alpha addr]
+                       (swap! alpha conj addr)
+                       alpha)
+        alpha5       (atom [])]
+    ((fn [alpha5 x]
+       (+
+        (push-address alpha5 'addr1)
+        2 x))
+     (push-address alpha5 'addr0)
+     2))
+
+  )
