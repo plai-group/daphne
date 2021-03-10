@@ -2,6 +2,7 @@
   (:refer-clojure :exclude [compile])
   (:require [clojure.string :as str]
             [clojure.edn :as edn]
+            [clojure.walk :as walk]
             [clojure.tools.cli :refer [parse-opts]]
             [clojure.java.io :as io]
             [clojure.data.json :as json]
@@ -157,6 +158,13 @@
         :python-class (foppl->python code)
         :infer (infer code opts)))))
 
+
+(defn add-string-encoding [x]
+  (cond ;(symbol? x)  (str "'" (name x))
+        ;(keyword? x) (str ":" (name x))
+        (string? x)  (str "'" x "'")
+        :else        x))
+
 (defn -main [& args]
   (let [{:keys [action options exit-message ok?]} (validate-args args)]
     (if exit-message
@@ -165,6 +173,7 @@
                        (slurp (or (:input-file options) *in*)))
             code (read-all-exps source)
             out' (execute action code options)
+            out' (walk/postwalk add-string-encoding out')
             out (if (not (string? out'))
                   (case (:format options)
                     :json (json/json-str out')
