@@ -158,11 +158,10 @@
         :python-class (foppl->python code)
         :infer (infer code opts)))))
 
-
 (defn add-string-encoding [x]
   (cond ;(symbol? x)  (str "'" (name x))
         ;(keyword? x) (str ":" (name x))
-        (string? x)  (str "'" x "'")
+        (string? x)  (str "\"" x "\"")
         :else        x))
 
 (defn -main [& args]
