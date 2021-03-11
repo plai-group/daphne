@@ -44,6 +44,7 @@
 (defmethod desugar-hoppl :let
   [exp]
   (let [[_ bindings & body] exp]
+    (assert (even? (count bindings)) "Let requires an even number of bindings.")
     ((fn expand-bindings [[f & r]]
        (let [[b v] f]
          (if f
@@ -88,16 +89,104 @@
 (defmethod desugar-hoppl :unrelated [exp]
   exp)
 
+(defn extend-call-sites [name exp]
+  (cond (seq? exp)
+        (let [[f & r] exp]
+          (if (= f name)
+            (concat [f] r [f])
+            ;; shadowed by lambda argument => skip extending
+            (if (and (= f 'fn) (some #(= name %) (first r)))
+              exp
+              (map (partial extend-call-sites name) exp))))
+
+        (vector? exp)
+        (mapv (partial extend-call-sites name) exp)
+
+        (map? exp)
+        (into {}
+              (map (fn [[k v]] [(extend-call-sites name k)
+                               (extend-call-sites name v)])
+                   exp))
+
+        :else exp))
+
+
+(comment
+
+  (extend-call-sites 'foo (desugar-hoppl '(foo 2 3)))
+
+
+  (extend-call-sites 'foo (desugar-hoppl '(let [x 5]
+                                            (foo x 3))))
+
+  (extend-call-sites 'foo (desugar-hoppl '(let [foo (fn [x] x)]
+                                            (foo 3))))
+
+
+  (extend-call-sites 'foo (desugar-hoppl '(let [foo (fn [x] x)]
+                                            (foo 3))))
+
+
+
+  (fn f [x]
+    (if (< x 10)
+      (f (inc x))
+      x))
+  ;; rewrite to
+  ((fn [x f] (if (< x 10)
+               (f (inc x) f)
+               x))
+   0
+   (fn [x f] (if (< x 10)
+               (f (inc x) f)
+               x)))
+
+  (defn foo [x]
+    (if (= x 5)
+      5
+      (foo (inc x))))
+
+  (
+   (eval
+    (second
+     (desugar-defn '(defn fib [x] (cond (= x 0) 1
+                                        (= x 1) 1
+                                        :else
+                                        (+ (fib (- x 1))
+                                           (fib (- x 2))))))))
+   4)
+
+
+  (second
+   (desugar-defn '(defn fib [x]
+                    (let [fib 42]
+                      (if (<= x 1) 1
+                          (+ (fib (- x 1))
+                             (fib (- x 2))))))))
+
+  ;; =>
+  (fn [x]
+    ((fn [x fib]
+       (cond (= x 0) 1 (= x 1) 1 :else (+ (fib (- x 1) fib) (fib (- x 2) fib))))
+     x
+     (fn [x fib]
+       (cond (= x 0) 1 (= x 1) 1 :else (+ (fib (- x 1) fib) (fib (- x 2) fib)))))))
+
 (defn desugar-defn [exp]
   (let [[op name args & body] exp]
     (assert (= op 'defn))
     (assert (symbol? name))
     (assert (vector? args))
-    [name (apply list 'fn #_name args body)]))
+    (let [aug-f (apply list 'fn #_name (conj args name)
+                       (extend-call-sites name (desugar-hoppl body)))]
+      [name (list 'fn args
+                  (concat [aug-f] args [aug-f]))])))
 
 ;; not used atm. because of global let binding for defns
 (defmethod desugar-hoppl :defn [exp]
   (let [[op name args & body] exp]
+    (assert (symbol? name))
+    (assert (vector? args))
     (apply list op name args (map desugar-hoppl body))))
 
 
@@ -151,5 +240,17 @@
 
   (eval (desugar-hoppl-global '[(loop 3 0 (fn [i c] (+ c 1)))]))
 
+  (fn f [x]
+    (if (< x 10)
+      (f (inc x))
+      x))
+  ;; rewrite to
+  ((fn [x f] (if (< x 10)
+               (f (inc x) f)
+               x))
+   0
+   (fn [x f] (if (< x 10)
+               (f (inc x) f)
+               x)))
 
   )
