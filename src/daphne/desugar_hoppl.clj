@@ -90,14 +90,17 @@
   exp)
 
 (defn extend-call-sites [name exp]
-  (cond (seq? exp)
+  (cond (list? exp)
         (let [[f & r] exp]
           (if (= f name)
-            (concat [f] r [f])
+            (apply list (concat [f] r [f]))
             ;; shadowed by lambda argument => skip extending
             (if (and (= f 'fn) (some #(= name %) (first r)))
               exp
-              (map (partial extend-call-sites name) exp))))
+              (apply list (map (partial extend-call-sites name) exp)))))
+
+        (seq? exp)
+        (doall (map (partial extend-call-sites name) exp))
 
         (vector? exp)
         (mapv (partial extend-call-sites name) exp)
@@ -125,6 +128,11 @@
 
   (extend-call-sites 'foo (desugar-hoppl '(let [foo (fn [x] x)]
                                             (foo 3))))
+
+  (extend-call-sites 'foo (desugar-hoppl '[(let [x 5]
+                                              (foo x 3))
+                                           (let [foo (fn [x] x)]
+                                             (foo 3))]))
 
 
 
@@ -180,7 +188,7 @@
     (let [aug-f (apply list 'fn #_name (conj args name)
                        (extend-call-sites name (desugar-hoppl body)))]
       [name (list 'fn args
-                  (concat [aug-f] args [aug-f]))])))
+                  (apply list (concat [aug-f] args [aug-f])))])))
 
 ;; not used atm. because of global let binding for defns
 (defmethod desugar-hoppl :defn [exp]

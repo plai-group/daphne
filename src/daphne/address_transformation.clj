@@ -56,7 +56,7 @@
            (map #(address-trafo % alpha) args))))
 
 (defmethod address-trafo :seq [exp alpha]
-  (map #(address-trafo % alpha) exp))
+  (doall (map #(address-trafo % alpha) exp)))
 
 (defmethod address-trafo :vector [exp alpha]
   (apply list
