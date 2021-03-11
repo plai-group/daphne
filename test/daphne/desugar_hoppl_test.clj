@@ -50,3 +50,49 @@
                (loop-helper 0 bound initial-value g)))
            (fn loop-helper [i c v g]
              (if (= i c) v (loop-helper (+ i 1) c (g i v) g))))))))
+
+
+(deftest extend-call-sites-test
+
+  (testing "Call-site rewrite for Y-combinator."
+
+    (is (= (extend-call-sites 'foo (desugar-hoppl '(foo 2 3)))
+           '(foo 2 3 foo)))
+
+    (is (= (extend-call-sites 'foo (desugar-hoppl '(let [x 5]
+                                                     (foo x 3))))
+           '((fn [x] (foo x 3 foo)) 5)))
+
+    (is (= (extend-call-sites 'foo (desugar-hoppl '(let [foo (fn [x] x)]
+                                                     (foo 3))))
+           '((fn [foo] (foo 3)) (fn [x] x))))
+
+    (is (= (extend-call-sites 'foo (desugar-hoppl '[(let [x 5]
+                                                      (foo x 3))
+                                                    (let [foo (fn [x] x)]
+                                                      (foo 3))]))
+           '(vector ((fn [x] (foo x 3 foo)) 5) ((fn [foo] (foo 3)) (fn [x] x)))))))
+
+
+(deftest desugaring-recursion-test
+  (is
+   (= (second
+       (desugar-defn '(defn fib [x]
+                        (if (<= x 1) 1
+                            (+ (fib (- x 1))
+                               (fib (- x 2)))))))
+
+      ;; =>
+
+      '(fn [x]
+         ((fn [x fib]
+            (if (<= x 1) 1
+                (+ (fib (- x 1) fib)
+                   (fib (- x 2) fib))))
+          x
+          (fn [x fib]
+            (if (<= x 1) 1
+                (+ (fib (- x 1) fib)
+                   (fib (- x 2) fib))))))
+
+      )))

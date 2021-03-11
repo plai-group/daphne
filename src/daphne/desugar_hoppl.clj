@@ -113,73 +113,6 @@
 
         :else exp))
 
-
-(comment
-
-  (extend-call-sites 'foo (desugar-hoppl '(foo 2 3)))
-
-
-  (extend-call-sites 'foo (desugar-hoppl '(let [x 5]
-                                            (foo x 3))))
-
-  (extend-call-sites 'foo (desugar-hoppl '(let [foo (fn [x] x)]
-                                            (foo 3))))
-
-
-  (extend-call-sites 'foo (desugar-hoppl '(let [foo (fn [x] x)]
-                                            (foo 3))))
-
-  (extend-call-sites 'foo (desugar-hoppl '[(let [x 5]
-                                              (foo x 3))
-                                           (let [foo (fn [x] x)]
-                                             (foo 3))]))
-
-
-
-  (fn f [x]
-    (if (< x 10)
-      (f (inc x))
-      x))
-  ;; rewrite to
-  ((fn [x f] (if (< x 10)
-               (f (inc x) f)
-               x))
-   0
-   (fn [x f] (if (< x 10)
-               (f (inc x) f)
-               x)))
-
-  (defn foo [x]
-    (if (= x 5)
-      5
-      (foo (inc x))))
-
-  (
-   (eval
-    (second
-     (desugar-defn '(defn fib [x] (cond (= x 0) 1
-                                        (= x 1) 1
-                                        :else
-                                        (+ (fib (- x 1))
-                                           (fib (- x 2))))))))
-   4)
-
-
-  (second
-   (desugar-defn '(defn fib [x]
-                    (let [fib 42]
-                      (if (<= x 1) 1
-                          (+ (fib (- x 1))
-                             (fib (- x 2))))))))
-
-  ;; =>
-  (fn [x]
-    ((fn [x fib]
-       (cond (= x 0) 1 (= x 1) 1 :else (+ (fib (- x 1) fib) (fib (- x 2) fib))))
-     x
-     (fn [x fib]
-       (cond (= x 0) 1 (= x 1) 1 :else (+ (fib (- x 1) fib) (fib (- x 2) fib)))))))
-
 (defn desugar-defn [exp]
   (let [[op name args & body] exp]
     (assert (= op 'defn))
@@ -247,18 +180,5 @@
   (eval (desugar-hoppl-global '[(defn add [a b] (+ a b)) (let [a (add 2 3)] (- a 1))]))
 
   (eval (desugar-hoppl-global '[(loop 3 0 (fn [i c] (+ c 1)))]))
-
-  (fn f [x]
-    (if (< x 10)
-      (f (inc x))
-      x))
-  ;; rewrite to
-  ((fn [x f] (if (< x 10)
-               (f (inc x) f)
-               x))
-   0
-   (fn [x f] (if (< x 10)
-               (f (inc x) f)
-               x)))
 
   )
