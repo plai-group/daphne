@@ -54,9 +54,9 @@
             (desugar-hoppl v))
            ((fn expand-body [[f & r]]
               (if-not (empty? r)
-                (list (list 'fn [(*my-gensym* "dontcare")]
-                            (desugar-hoppl f))
-                      (expand-body r))
+                (list (list 'fn []
+                            (desugar-hoppl f)
+                            (expand-body r)))
                 #_(list 'let [(*my-gensym* "dontcare") (desugar-hoppl f)]
                       (expand-body r))
                 (desugar-hoppl f)))
