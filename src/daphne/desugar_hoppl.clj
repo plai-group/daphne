@@ -54,7 +54,10 @@
             (desugar-hoppl v))
            ((fn expand-body [[f & r]]
               (if-not (empty? r)
-                (list 'let [(*my-gensym* "dontcare") (desugar-hoppl f)]
+                (list (list 'fn [(*my-gensym* "dontcare")]
+                            (desugar-hoppl f))
+                      (expand-body r))
+                #_(list 'let [(*my-gensym* "dontcare") (desugar-hoppl f)]
                       (expand-body r))
                 (desugar-hoppl f)))
             body))))
@@ -68,11 +71,12 @@
     (apply list 'fn #_name args (map desugar-hoppl body))))
 
 (defmethod desugar-hoppl :map [exp]
-  (conj (map (fn [[k v]]
-               [(desugar-hoppl k)
-                (desugar-hoppl v)])
-             exp)
-        'hash-map))
+  (apply list
+         (conj (mapcat (fn [[k v]]
+                         [(desugar-hoppl k)
+                          (desugar-hoppl v)])
+                       exp)
+               'hash-map)))
 
 (defmethod desugar-hoppl :list [exp]
   (apply list (map #(desugar-hoppl %) exp)))
