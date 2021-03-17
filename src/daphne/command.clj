@@ -29,10 +29,11 @@
         options-summary
         ""
         "Actions:"
-        "  graph        Create graphical model of the program"
-        "  desugar      Return a desugared syntax object of the program"
-        "  python-class Create a Python class with sample and log probability methods for the program"
-        "  infer        Run inference on the program"
+        "  graph         Create graphical model of the program"
+        "  desugar       Return a desugared FOPPL syntax object of the program"
+        "  desugar-hoppl Return a desugared HOPPL syntax object of the program"
+        "  python-class  Create a Python class with sample and log probability methods for the program"
+        "  infer         Run inference on the program"
         ""
         "Please refer to the manual page for more information."]
        (str/join \newline)))
@@ -41,7 +42,7 @@
   (str "The following errors occurred while parsing your command:\n\n"
        (str/join \newline errors)))
 
-(def actions #{"graph" "desugar" "desugar-hoppl" "python-class" "infer"})
+(def actions #{"graph" "desugar" "desugar-hoppl" "desugar-hoppl-noaddress" "python-class" "infer"})
 
 (def cli-options
   ;; An option with a required argument
@@ -153,8 +154,9 @@
         :graph (-> code program->graph desugar-datastructures-graph)
         :desugar (-> code desugar desugar-datastructures)
         :desugar-hoppl (list
-                       'fn ['alpha]
-                       (-> code desugar-hoppl-global (address-trafo 'alpha)))
+                        'fn ['alpha]
+                        (-> code desugar-hoppl-global (address-trafo 'alpha)))
+        :desugar-hoppl-noaddress (-> code desugar-hoppl-global)
         :python-class (foppl->python code)
         :infer (infer code opts)))))
 
@@ -185,4 +187,3 @@
           (spit (:output-file options) out)
           (println out))
         (System/exit 0)))))
-
