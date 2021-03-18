@@ -12,6 +12,7 @@
             [daphne.desugar :refer [desugar]]
             [daphne.desugar-datastructures :refer [desugar-datastructures]]
             [daphne.desugar-hoppl :refer [desugar-hoppl-global]]
+            [daphne.hoppl-cps :refer [hoppl-cps]]
             [daphne.metropolis-within-gibbs :refer [metropolis-within-gibbs]]
             [daphne.hmc :refer [hmc]]
             [daphne.core :refer [program->graph]])
@@ -29,9 +30,11 @@
         options-summary
         ""
         "Actions:"
-        "  graph         Create graphical model of the program"
-        "  desugar       Return a desugared FOPPL syntax object of the program"
-        "  desugar-hoppl Return a desugared HOPPL syntax object of the program"
+        "  graph                   Create graphical model of the program"
+        "  desugar                 Return a desugared FOPPL syntax object of the program"
+        "  desugar-hoppl           Return a desugared HOPPL syntax object of the program"
+        "  desugar-hoppl-noaddress Return a desugared HOPPL syntax object of the program without addresses"
+        "  desugar-hoppl-cps       Return a desugared HOPPL syntax object in continuation passing style"
         "  python-class  Create a Python class with sample and log probability methods for the program"
         "  infer         Run inference on the program"
         ""
@@ -42,7 +45,8 @@
   (str "The following errors occurred while parsing your command:\n\n"
        (str/join \newline errors)))
 
-(def actions #{"graph" "desugar" "desugar-hoppl" "desugar-hoppl-noaddress" "python-class" "infer"})
+(def actions #{"graph" "desugar" "desugar-hoppl" "desugar-hoppl-noaddress" "desugar-hoppl-cps"
+              "python-class" "infer"})
 
 (def cli-options
   ;; An option with a required argument
@@ -156,6 +160,10 @@
         :desugar-hoppl (list
                         'fn ['alpha]
                         (-> code desugar-hoppl-global (address-trafo 'alpha)))
+        :desugar-hoppl-cps (list
+                            'fn ['alpha 'k-return]
+                            (-> code desugar-hoppl-global (address-trafo 'alpha) (hoppl-cps 'k-return)))
+
         :desugar-hoppl-noaddress (-> code desugar-hoppl-global)
         :python-class (foppl->python code)
         :infer (infer code opts)))))
