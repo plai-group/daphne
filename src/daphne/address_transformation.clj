@@ -41,7 +41,7 @@
            (map #(address-trafo % alpha) body))))
 
 (defmethod address-trafo :if [exp alpha]
-  (doall (map #(address-trafo % alpha) exp)))
+  (apply list (map #(address-trafo % alpha) exp)))
 
 (defmethod address-trafo :map [exp alpha]
   (into {} (map (fn [[k v]]
