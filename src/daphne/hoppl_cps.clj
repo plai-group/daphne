@@ -22,11 +22,12 @@
 
 (defmulti hoppl-cps dispatch-hoppl-cps)
 
-(defmethod hoppl-cps :fn [exp _]
+(defmethod hoppl-cps :fn [exp k]
   (let [[_ args body] exp
-        k             (*my-gensym* "k")]
-    (list 'fn (conj args k)
-          (hoppl-cps body k))))
+        k'             (*my-gensym* "k")]
+    (list k
+          (list 'fn (conj args k')
+                (hoppl-cps body k')))))
 
 (defmethod hoppl-cps :if [exp k]
   (let [[_ pred then else] exp
@@ -55,12 +56,15 @@
           v)
 
         (seq? exp)
-        (let [exp (doall (map #(invert-control-flow % k collected) exp))
+        (let [exp (doall
+                   ;; undo call of continuation by unwrapping second, because we
+                   ;; are not returning yet, but passing the values to a function
+                   (map #(second (invert-control-flow % k collected)) exp))
               v   (*my-gensym* "cps")]
           (swap! collected conj [v exp])
-          v)
+          (list k v))
 
-        :else exp))
+        :else (list k exp)))
 
 (defn nest-lambdas [control-flow k]
   (let [[[k' exp] & r] control-flow]
