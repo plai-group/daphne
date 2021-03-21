@@ -15,9 +15,6 @@
         (list? exp)
         :list
 
-        (seq? exp)
-        :seq
-
         :else :unrelated))
 
 (defmulti hoppl-cps dispatch-hoppl-cps)
@@ -39,27 +36,32 @@
 
 (defn invert-control-flow
   [exp k collected]
-  (cond (and (seq? exp)
+  (cond (and (list? exp)
              (= (first exp) 'fn))
         (hoppl-cps exp k)
 
-        (and (seq? exp)
+        (and (list? exp)
              (= (first exp) 'if))
         (let [exp (let [[_ pred then else] exp
-                        k'                 (*my-gensym* "cps")]
-                    (hoppl-cps pred (list 'fn [k']
-                                          (list 'if k'
-                                                (hoppl-cps then k)
-                                                (hoppl-cps else k)))))
+                        k'                 (*my-gensym* "ifcps")]
+                    (with-meta 
+                      (hoppl-cps pred (list 'fn [k']
+                                            (list 'if k'
+                                                  (hoppl-cps then k)
+                                                  (hoppl-cps else k))))
+                      {:ifcps true}))
               v   (*my-gensym* "cps")]
           (swap! collected conj [v exp])
           v)
 
-        (seq? exp)
+        (list? exp)
         (let [exp (doall
                    ;; undo call of continuation by unwrapping second, because we
                    ;; are not returning yet, but passing the values to a function
-                   (map #(second (invert-control-flow % k collected)) exp))
+                   (map #(let [res (invert-control-flow % k collected)]
+                          (if (and (list? %) (= 'if (first %)))
+                            res
+                            (second res))) exp))
               v   (*my-gensym* "cps")]
           (swap! collected conj [v exp])
           (list k v))
@@ -69,10 +71,21 @@
 (defn nest-lambdas [control-flow k]
   (let [[[k' exp] & r] control-flow]
     (apply list
-           (concat exp [(if (seq r)
-                          (list 'fn [k']
-                                (nest-lambdas r k))
-                          k)]))))
+           (if (:ifcps (meta exp))
+             ;; TODO this does not respect bindings that could shadow the
+             ;; continuation
+             (walk/postwalk (fn [x]
+                              (if (= x k)
+                                (if (seq r)
+                                  (list 'fn [k']
+                                        (nest-lambdas r k))
+                                  k)
+                                x))
+                            exp)
+             (concat exp [(if (seq r)
+                            (list 'fn [k']
+                                  (nest-lambdas r k))
+                            k)])))))
 
 (defmethod hoppl-cps :list [exp k]
   (nest-lambdas (let [collected (atom [])]
