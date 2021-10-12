@@ -4,7 +4,7 @@
             [daphne.core :refer [code->graph]]))
 
 
-(deftest convolution-test
+#_(deftest convolution-test
   (testing "Test convolution function."
     ;; pytorch conv2d validated
     [[[2.202277681399303 2.8281133363421826]

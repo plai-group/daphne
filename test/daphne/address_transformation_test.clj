@@ -28,7 +28,8 @@
   (let [push-address (fn [alpha addr]
                        (swap! alpha conj addr)
                        alpha)
-        alpha5       (atom [])]
+        alpha5       (atom [])
+        + #(+ %2 %3)]
     ((fn [alpha5 x]
        (+
         (push-address alpha5 'addr1)

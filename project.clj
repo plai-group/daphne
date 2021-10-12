@@ -14,7 +14,7 @@
                  [backtick "0.3.4"]
                  ;; for command line fu
                  [org.clojure/tools.cli "1.0.194"]
-                 [camel-snake-kebab "0.4.0"] ]
+                 [camel-snake-kebab "0.4.0"]]
 
   :jvm-opts ["-Xss64m" "-Xmx4g"]
 

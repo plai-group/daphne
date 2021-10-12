@@ -35,21 +35,21 @@
                                        (let [a (add 2 3)]
                                          (- a 1))])))
            '((fn [add] ((fn [a] (- a 1)) (add 2 3)))
-             (fn [a b] (+ a b)))))
+             (fn [a b] ((fn [a b add] (+ a b)) a b (fn [a b add] (+ a b)))))))
     #_(is (=
-         (let [gensyms (atom (range))]
-           (binding [*my-gensym* (fn [s]
-                                   (let [f (first @gensyms)]
-                                     (swap! gensyms rest)
-                                     (symbol (str s f))))]
-             (desugar-hoppl-global '[(loop 3 0 (fn [i c] (+ c 1)))])))
-         '((fn let0 [loop-helper]
-             (let [bound 3
-                   initial-value 0
-                   g (fn loop1 [i w] ((fn [i c] (+ c 1)) i w))]
-               (loop-helper 0 bound initial-value g)))
-           (fn loop-helper [i c v g]
-             (if (= i c) v (loop-helper (+ i 1) c (g i v) g))))))))
+           (let [gensyms (atom (range))]
+             (binding [*my-gensym* (fn [s]
+                                     (let [f (first @gensyms)]
+                                       (swap! gensyms rest)
+                                       (symbol (str s f))))]
+               (desugar-hoppl-global '[(loop 3 0 (fn [i c] (+ c 1)))])))
+           '((fn let0 [loop-helper]
+               (let [bound 3
+                     initial-value 0
+                     g (fn loop1 [i w] ((fn [i c] (+ c 1)) i w))]
+                 (loop-helper 0 bound initial-value g)))
+             (fn loop-helper [i c v g]
+               (if (= i c) v (loop-helper (+ i 1) c (g i v) g))))))))
 
 
 (deftest extend-call-sites-test
