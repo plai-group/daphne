@@ -50,7 +50,7 @@
     (apply list op name args (map desugar-datastructures body))))
 
 (defmethod desugar-datastructures :map [exp]
-  (conj (map (fn [[k v]]
+  (conj (mapcat (fn [[k v]]
                [(desugar-datastructures k)
                 (desugar-datastructures v)])
              exp)
