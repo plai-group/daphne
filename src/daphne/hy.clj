@@ -239,27 +239,27 @@
 (def python-imports
   '((import torch)
     (import math)
-    (import [torch.distributions [Normal Bernoulli Laplace Uniform]])))
+    (import torch.distributions [Normal Bernoulli Laplace Uniform])))
 
 
 (defn foppl->python
   "Compiles FOPPL to Python flow representation."
   [code]
   (let [hy-code       (code->hy code)
-        python-output (->>
-                       (with-out-str
-                         (doseq [i python-imports]
-                           (pprint i))
-                         (println)
-                         (pprint
-                          '(defn safe-tanh [x]
-                             (if (isinstance x float)
-                               (math.tanh x)
-                               (torch.tanh x))))
-                         (println)
-                         (pprint hy-code))
-                       (sh/sh "hy2py" :in)
-                       :out)]
+        prefixed-hy-code (with-out-str
+                           (doseq [i python-imports]
+                             (pprint i))
+                           (println)
+                           (pprint
+                            '(defn safe-tanh [x]
+                               (if (isinstance x float)
+                                 (math.tanh x)
+                                 (torch.tanh x))))
+                           (println)
+                           (pprint hy-code))
+        python-output (->> prefixed-hy-code
+                         (sh/sh "hy2py" :in)
+                         :out)]
     ;; TODO HACK patch for stupid unary + injection in recent hy 0.18+ versions,
     ;; which is breaking pytorch tensor addition :(
     (.replace python-output "(+(" "((")))
