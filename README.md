@@ -104,6 +104,12 @@ starting `"vector"` expression to distinguish it from the normal lists. This
 format makes it easy to write custom interpreters in any language that can read
 JSON.
 
+If you are using `daphne` compiler for the UBC CS532: Probabilistic Programming course
+then you are good to go as long as you can run the `lein` commands described above.
+You do **not** need to have the "python export" functionality, described below, working.
+
+---
+
 ### Python Export
 
 To create a Python class instead of a JSON graphical model you can use the
