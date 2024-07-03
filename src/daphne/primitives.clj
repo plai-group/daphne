@@ -1,6 +1,9 @@
 (ns daphne.primitives
+  (:refer-clojure :exclude [range])
   (:require [clojure.core.matrix :as m]
             [anglican.runtime :refer [tanh]]))
+
+(defn range [& args] (vec (apply clojure.core/range args)))
 
 (defn append [& args] (apply conj args))
 

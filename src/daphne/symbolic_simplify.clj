@@ -7,13 +7,16 @@
                 'first first
                 'second second
                 'last last
+                'butlast (fn [s] (vec (butlast s)))
                 'nth nth
                 'conj conj
                 'cons cons
                 'vector vector
                 'subvec subvec
+                'vec vec
                 'get get
                 'put assoc
+                'list list
                 'append append
                 'count count
                 'concat concat
@@ -136,7 +139,7 @@
     (let [f (mem-symbolic-simplify (first exp))
           s (mem-symbolic-simplify (second exp))]
       (cond (= f 'vector)
-            (apply vector (map mem-symbolic-simplify (rest exp)))
+            (mapv mem-symbolic-simplify (rest exp))
 
             (list? s)
             (apply list

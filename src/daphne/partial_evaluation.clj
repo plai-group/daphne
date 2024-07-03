@@ -1,11 +1,13 @@
 (ns daphne.partial-evaluation
+  (:refer-clojure :exclude [range])
   (:require [daphne.substitute :refer [substitute]]
             [daphne.symbolic-simplify :refer [mem-symbolic-simplify]]
             [daphne.desugar-let :refer [mem-desugar-let]]
             [daphne.desugar :refer [mem-desugar]]
             [clojure.core.memoize :as memoize]
             [daphne.gensym :as gensym]
-            [anglican.runtime]))
+            #_[anglican.runtime]
+            [daphne.primitives :refer :all]))
 
 
 (defn dispatch-partial-evaluation [exp]
@@ -61,7 +63,8 @@
     (not (some symbol? (flatten x)))
     (not (symbol? x))))
 
-(def mem-eval (memoize/lu eval :lu/threshold 10000))
+(def mem-eval 
+  (memoize/lu #(binding [*ns* (the-ns 'daphne.partial-evaluation)] (eval %)) :lu/threshold 10000))
 
 (defn rand-symbol? [x]
   (and (symbol? x)
@@ -171,7 +174,7 @@
      (into {})))
 
 (defn raw-fixed-point-simplify [exp]
-    (let [gensyms (atom (range))]
+    (let [gensyms (atom (clojure.core/range))]
       (binding [gensym/*my-gensym* (fn [s]
                                      (let [f (first @gensyms)]
                                        (swap! gensyms rest)

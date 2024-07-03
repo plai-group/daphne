@@ -137,7 +137,7 @@
 
 (defmethod desugar-hoppl :loop [exp]
   (let [[_ c e f & es] exp
-        as (map (fn [_] (*my-gensym* "loop")) es)]
+        as (map (fn [_] (*my-gensym*)) es)]
     (list 'let
           (vec
            (concat

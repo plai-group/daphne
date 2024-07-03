@@ -172,10 +172,12 @@
 
 (defmethod analyze :sample
   [rho phi exp]
-  (let [[_ e] exp
+  (let [[n e] (if (= (count exp) 2)
+                ["sample" (second exp)]
+                (rest exp))
         e (fixed-point-simplify e)
         [rho {:keys [V A P Y]} E] (analyze rho phi e)
-        v (*my-gensym* "sample")
+        v (*my-gensym* n)
         Z (free-vars E *bound*)
         F (list 'sample* (fixed-point-simplify E))]
     [rho
@@ -192,18 +194,21 @@
 
 (defmethod analyze :observe
   [rho phi exp]
-  (let [[_ e obs] exp
+  (let [[n e obs] (if (= (count exp) 3)
+                    (concat ["observe"] (rest exp))
+                    (rest exp))
         e (fixed-point-simplify e)
         obs (fixed-point-simplify obs)
         [rho1 G1 E1] (analyze rho phi e)
         [rho2 G2 E2] (analyze rho phi obs)
         {:keys [V A P Y]} (merge-graphs G1 G2)
-        v (*my-gensym* "observe")
+        v (*my-gensym* n)
         F1 (list 'observe* e obs)
         F (fixed-point-simplify (list 'if phi F1 1))
         Z (free-vars e *bound*) #_(disj (free-vars e *bound*) v)
         _ (when (not (empty? (free-vars obs *bound*)))
-            (throw (ex-info "Observation references random vars."
+            (println "Observation references free variables." {:obs obs :exp exp})
+            #_(throw (ex-info "Observation references random vars."
                             {:obs obs
                              :exp exp})))
         B (for [z Z] [z #{v}])]

@@ -37,13 +37,16 @@
       (apply + (foreach (count a) [n (range (count a))]
                         (inner-square (get a n) (get b n)))))
 
-    (defn slice-square [d size i j]
-      (foreach size [k (range i (+ size i))]
-               (subvec (get d k) j (+ size j))))
+    (defn slice-square [input size stride i j]
+      (foreach size [k (range (* i stride)
+                              (+ size (* i stride)))]
+               (subvec (get input k)
+                       (* j stride)
+                       (+ size (* j stride)))))
 
-    (defn slice-cubic [inputs size i j]
+    (defn slice-cubic [inputs size stride i j]
       (foreach (count inputs) [input inputs]
-               (slice-square input size i j)))
+               (slice-square input size stride i j)))
 
     (defn sample-layer [hidden-layer]
       (foreach (count hidden-layer) [hi hidden-layer]
@@ -56,26 +59,15 @@
             size (count (first kernel))
             remainder (- size stride)
             to-cover (- ic remainder)
-            iters (int (Math/floor (/ to-cover stride)))
-            #_output #_(foreach iters [i_ (range iters)]
-                            (foreach iters [j_ (range iters)]
-                                     (let [i (* i_ stride)
-                                           j (* j_ stride)]
-                                       (inner-cubic (slice-cubic inputs kw i j)
-                                                    kernel))))
-            output (foreach iters [i (range iters)]
-                           (foreach iters [j (range iters)]
-                                     (inner-cubic #_(slice-cubic inputs kw i j)
-                                                  (foreach (count inputs) [input inputs]
-                                                           (foreach size [k (range (* i stride)
-                                                                                   (+ size (* i stride)))]
-                                                                    (subvec (get input k)
-                                                                            (* j stride)
-                                                                            (+ size (* j stride))))
-                                                           #_(slice-square input kw i j))
-                                                  kernel)))]
-        output))
+            iters (int (Math/floor (/ to-cover stride)))]
+        (foreach iters [i (range iters)]
+                 (foreach iters [j (range iters)]
+                          (inner-cubic (slice-cubic inputs size stride i j)
+                                       kernel)))))
 
     (defn conv2d [inputs kernels bias stride]
       (foreach (count kernels) [ksi (range (count kernels))]
-               (conv-helper inputs (get kernels ksi) (get bias ksi) stride)))])
+               (conv-helper inputs (get kernels ksi) (get bias ksi) stride)))]
+
+
+  )
