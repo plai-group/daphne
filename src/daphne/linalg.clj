@@ -48,12 +48,6 @@
       (foreach (count inputs) [input inputs]
                (slice-square input size stride i j)))
 
-    (defn sample-layer [hidden-layer]
-      (foreach (count hidden-layer) [hi hidden-layer]
-               (foreach (count hi) [hii hi]
-                        (foreach (count hii) [hiii hii]
-                                 (sample (normal hiii 1) 0)))))
-
     (defn conv-helper [inputs kernel bias stride]
       (let [ic (count (first inputs))
             size (count (first kernel))
@@ -67,7 +61,11 @@
 
     (defn conv2d [inputs kernels bias stride]
       (foreach (count kernels) [ksi (range (count kernels))]
-               (conv-helper inputs (get kernels ksi) (get bias ksi) stride)))]
+               (conv-helper inputs (get kernels ksi) (get bias ksi) stride)))
 
 
-  )
+    (defn sample-layer [hidden-layer]
+      (foreach (count hidden-layer) [hi hidden-layer]
+               (foreach (count hi) [hii hi]
+                        (foreach (count hii) [hiii hii]
+                                 (sample (normal hiii 1) 0)))))])
