@@ -84,6 +84,7 @@
         evaled-bindings (vec (apply concat evaled-bindings'))
         new-body (map (fn [exp]
                         (let [sub-exp (reduce (fn [exp [s v]]
+                        ;; TODO why is this necessary?
                                                 (if (value? v)
                                                   (substitute exp s v)
                                                   exp))
@@ -185,10 +186,10 @@
             (println "Warning, 100 times simplified on" exp))
           #_(println "fixed point search" i)
           (let [new-exp (-> exp
-                           mem-desugar-let
+                           mem-desugar
                            mem-partial-evaluation
                            mem-symbolic-simplify
-                           mem-desugar)]
+                           #_mem-desugar)]
           (if (= new-exp exp)
             exp
             (recur new-exp (inc i))))))))

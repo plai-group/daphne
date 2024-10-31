@@ -2,7 +2,12 @@
 
 
 (def foppl-linalg
-  '[(defn const-vector [value size]
+  '[(defn reduce [f acc s]
+      (if (> (count s) 0)
+        (reduce f (f acc (first s)) (rest s))
+        acc))
+
+    (defn const-vector [value size]
       (vec (repeat size value)))
 
     (defn elem-add [tensor elem]
@@ -34,8 +39,8 @@
       (loop (count a) 0 row-helper a b))
 
     (defn inner-cubic [a b]
-      (apply + (foreach (count a) [n (range (count a))]
-                        (inner-square (get a n) (get b n)))))
+      (reduce + 0 (foreach (count a) [n (range (count a))]
+                           (inner-square (get a n) (get b n)))))
 
     (defn slice-square [input size stride i j]
       (foreach size [k (range (* i stride)

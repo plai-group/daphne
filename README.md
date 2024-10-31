@@ -129,6 +129,28 @@ Make sure that you have [hy-lang](https://hylang.org/) for Python 3 installed
 and check for `hy2py` on your path. The Python dependencies are documented in
 `requirements.txt`.
 
+### CUDA Export
+
+To export to CUDA you can run the following command
+
+~~~bash
+lein run cuda -i programs/arithmetic_circuit.daphne -o arithmetic_circuit.cu
+~~~
+
+You can then compile the code if you have the CUDA compiler nvcc installed with
+
+~~~bash
+nvcc -o arithmetic_circuit arithmetic_circuit.cu
+~~~
+
+and run it with to draw 10 samples
+
+~~~bash
+./arithmetic_circuit 10
+~~~
+
+This will print 10 samples and the log probabilities for each observe statements. If you want to use the data in a different format you can edit [main.cu](resources/cuda/main.cu) to handle IO differently, e.g. with JSON or torch export.
+
 ### Continuous Normalizing Flow training
 
 We can now use the provided Python files to train a neural network with

@@ -172,6 +172,7 @@
 
 (defmethod analyze :sample
   [rho phi exp]
+  (assert (>= (count exp) 2) "Sample requires at least two arguments.")
   (let [[n e] (if (= (count exp) 2)
                 ["sample" (second exp)]
                 (rest exp))
@@ -194,6 +195,7 @@
 
 (defmethod analyze :observe
   [rho phi exp]
+  (assert (>= (count exp) 3) "Observe requires at least three arguments.")
   (let [[n e obs] (if (= (count exp) 3)
                     (concat ["observe"] (rest exp))
                     (rest exp))

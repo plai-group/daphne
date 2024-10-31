@@ -7,6 +7,7 @@
             [clojure.java.io :as io]
             [clojure.data.json :as json]
             [daphne.address-transformation :refer [address-trafo]]
+            [daphne.cuda :refer [generate-cuda]]
             [daphne.gensym :refer [*my-gensym*]]
             [daphne.hy :refer [foppl->python]]
             [daphne.desugar :refer [desugar]]
@@ -36,6 +37,7 @@
         "  desugar-hoppl-noaddress Return a desugared HOPPL syntax object of the program without addresses"
         "  desugar-hoppl-cps       Return a desugared HOPPL syntax object in continuation passing style"
         "  python-class  Create a Python class with sample and log probability methods for the program"
+        "  cuda          Compile the program to CUDA code"
         "  infer         Run inference on the program"
         ""
         "Please refer to the manual page for more information."]
@@ -46,7 +48,7 @@
        (str/join \newline errors)))
 
 (def actions #{"graph" "desugar" "desugar-hoppl" "desugar-hoppl-noaddress" "desugar-hoppl-cps"
-              "python-class" "infer"})
+              "python-class" "infer" "cuda"})
 
 (def cli-options
   ;; An option with a required argument
@@ -166,7 +168,8 @@
 
         :desugar-hoppl-noaddress (-> code desugar-hoppl-global)
         :python-class (foppl->python code)
-        :infer (infer code opts)))))
+        :infer (infer code opts)
+        :cuda (-> code program->graph second generate-cuda)))))
 
 (defn add-string-encoding [x]
   (cond ;(symbol? x)  (str "'" (name x))
@@ -182,7 +185,7 @@
                        (slurp (or (:input-file options) *in*)))
             code (read-all-exps source)
             out' (execute action code options)
-            out' (walk/postwalk add-string-encoding out')
+            out' (if (= action :cuda) out' (walk/postwalk add-string-encoding out'))
             out (if (not (string? out'))
                   (case (:format options)
                     :json (json/json-str out')

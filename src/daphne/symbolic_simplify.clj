@@ -179,6 +179,7 @@
           exp)))))
 
 
+;; that should just be the base case of application above not be treated specially, it is only here to potentially speed up this case by dispatching first
 (defmethod symbolic-simplify :anglican-application
   [exp]
   (apply list (conj (map mem-symbolic-simplify (rest exp))
