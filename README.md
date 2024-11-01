@@ -143,7 +143,7 @@ You can then compile the code if you have the CUDA compiler nvcc installed with
 nvcc -o arithmetic_circuit arithmetic_circuit.cu
 ~~~
 
-and run it with to draw 10 samples
+and run it to draw 10 samples
 
 ~~~bash
 ./arithmetic_circuit 10
@@ -251,17 +251,3 @@ paper](https://github.com/mlresearch/v108/tree/gh-pages/weilbach20a)
 - provide sacred local filesystem loader for the plot routines
 - provide plotting code for deconvolution figure
 
-## License for Clojure compiler
-
-Copyright © 2018-2021 Christian Weilbach
-
-This program and the accompanying materials are made available under the
-terms of the Eclipse Public License 2.0 which is available at
-http://www.eclipse.org/legal/epl-2.0.
-
-This Source Code may also be made available under the following Secondary
-Licenses when the conditions for such availability set forth in the Eclipse
-Public License, v. 2.0 are satisfied: GNU General Public License as published by
-the Free Software Foundation, either version 2 of the License, or (at your
-option) any later version, with the GNU Classpath Exception which is available
-at https://www.gnu.org/software/classpath/license.html.
