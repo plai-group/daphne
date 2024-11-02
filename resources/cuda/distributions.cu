@@ -21,6 +21,28 @@ __device__ float log_prob_laplace(float x, float mean, float scale) {
     return -logf(2 * scale) - fabsf(x - mean) / scale;
 }
 
+// Beta Distribution
+__device__ float sample_beta(curandState* state, float alpha, float beta) {
+    float a = alpha - 1.0f, b = beta - 1.0f;
+    float A = a + b;
+    float B = 1.0f / (1.0f + sqrtf(2.0f * A - 1.0f));
+    float C = a + (1.0f / B);
+    float L = C * logf(C) - C + lgammaf(a + 1.0f) + lgammaf(b + 1.0f) - lgammaf(A + 1.0f);
+    float p, u, x, y;
+    do {
+        u = curand_uniform(state);
+        x = B * u;
+        y = C * x;
+        p = y < 1.0f ? expf(a * logf(x) + b * logf(y) - L) : 0.0f;
+    } while (curand_uniform(state) >= p);
+    return x / (x + y);
+}
+
+__device__ float log_prob_beta(float x, float alpha, float beta) {
+    if (x < 0 || x > 1) return -INFINITY;
+    return (alpha - 1) * logf(x) + (beta - 1) * logf(1 - x) - lgammaf(alpha) - lgammaf(beta) + lgammaf(alpha + beta);
+}
+
 // Uniform Distribution
 __device__ float sample_uniform(curandState* state, float lower, float upper) {
     return lower + (upper - lower) * curand_uniform(state);

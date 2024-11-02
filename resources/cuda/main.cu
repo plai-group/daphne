@@ -25,15 +25,15 @@ int main(int argc, char* argv[]) {
         return 1;
     }
     int N = std::stoi(argv[1]);  // Number of samples
-    int K = %d; // std::stoi(argv[2]);  // Number of sample statements
-    int L = %d; // std::stoi(argv[3]);  // Number of observation statements
+    int K = %d; // Number of sample statements
+    int L = %d; // Number of observation statements
 
     // Allocate device memory for samples, observations, and results
     float* samples;
     float* log_probs;
     curandState* rand_states;
     checkCudaError(cudaMalloc((void**)&samples, N * K * sizeof(float)));
-    checkCudaError(cudaMalloc((void**)&log_probs, N * L * sizeof(float)));  // Six observations per sample pair
+    checkCudaError(cudaMalloc((void**)&log_probs, N * L * sizeof(float))); 
     checkCudaError(cudaMalloc((void**)&rand_states, N * sizeof(curandState)));
 
     // Initialize random states
@@ -51,22 +51,32 @@ int main(int argc, char* argv[]) {
     checkCudaError(cudaMemcpy(res_samples, samples, N * K * sizeof(float), cudaMemcpyDeviceToHost));
     checkCudaError(cudaMemcpy(res_log_probs, log_probs, N * L * sizeof(float), cudaMemcpyDeviceToHost));
 
-    // Print samples and log_probs
+    // Print samples and log_probs into JSON
+    cout << "{";
+    cout << "\"samples\":[\n";
     for (int i = 0; i < N; ++i) {
-        std::cout << "Sample " << i << ": ";
+        cout << "[";
         for (int j = 0; j < K; ++j) {
-            std::cout << res_samples[i * K + j] << " ";
+            cout << res_samples[i * K + j];
+            if (j < K - 1) cout << ",";
         }
-        std::cout << std::endl;
+        cout << "]";
+        if (i < N - 1) cout << ",\n";
     }
-
+    cout << "],\n";
+    cout << "\"log_probs\":[\n";
     for (int i = 0; i < N; ++i) {
-        std::cout << "Observe " << i << ": ";
+        cout << "[";
         for (int j = 0; j < L; ++j) {
-            std::cout << res_log_probs[i * L + j] << " ";
+            cout << res_log_probs[i * L + j];
+            if (j < L - 1) cout << ",";
         }
-        std::cout << std::endl;
+        cout << "]";
+        if (i < N - 1) cout << ",\n";
     }
+    cout << "]";
+    cout << "}";
+
 
     // Free device memory
     checkCudaError(cudaFree(samples));
