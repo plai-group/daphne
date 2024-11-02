@@ -1,4 +1,5 @@
 (ns daphne.metropolis-within-gibbs
+  (:refer-clojure :exclude [abs])
   (:require [daphne.core :refer [code->graph sample-from-prior topo-sort]]
             [daphne.analyze :refer [*bound*]]
             [daphne.free-vars :refer [free-vars]]

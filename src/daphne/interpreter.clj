@@ -1,5 +1,5 @@
 (ns daphne.interpreter
-  (:refer-clojure :exclude [eval])
+  (:refer-clojure :exclude [eval abs])
   (:require [anglican.runtime :refer :all]
             [daphne.desugar :refer [desugar]]))
 

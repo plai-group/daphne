@@ -210,8 +210,8 @@
 
 ;; Main CUDA generation functions
 (defn generate-sample-observe-code [graph]
-  (let [samples (filter #(re-find #"sample" (name %)) (:V graph))
-        observations (filter #(re-find #"observe" (name %)) (:V graph))
+  (let [samples (sort (filter #(re-find #"sample" (name %)) (:V graph)))
+        observations (sort (filter #(re-find #"observe" (name %)) (:V graph)))
 
         sample-ids (into {} (map-indexed (fn [i sample] [sample i]) samples))
         observation-ids (into {} (map-indexed (fn [i obs] [obs i]) observations))

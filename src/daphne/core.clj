@@ -1,6 +1,7 @@
 (ns daphne.core
   "This namespace contains an implementation of a FOPPL compiler following chapter
   3.1 of 'An Introduction to Probabilistic Programming' by van de Meent et al."
+  (:refer-clojure :exclude [abs range])
   (:require [clojure.set :as set]
             [anglican.runtime :refer :all]
             [daphne.primitives :refer :all]

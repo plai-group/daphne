@@ -12,11 +12,10 @@ translation to an amortizing neural network as is described further down.
 
 ## Usage
 
-To run this compiler you need to have [leiningen](https://leiningen.org/) and a
-JVM for Java 8 or later installed. To see all the options provided by the compiler run:
+To run this compiler you need to have a JVM and the [clj](https://clojure.org/guides/deps_and_cli) command line tool installed. To see all the options provided by the compiler run:
 
 ~~~clojure
-lein run graph --help
+clj -M:run graph --help
 ~~~
 
 in the directory where you have checked out this repository.
@@ -42,7 +41,7 @@ following file in `programs/arithmetic_circuit.daphne`,
 you can run 
 
 ~~~bash
-lein run graph -i programs/arithmetic_circuit.daphne -o output.json
+clj -M:run graph -i programs/arithmetic_circuit.daphne -o output.json
 ~~~
 
 with the input program as the first argument and the output path as the second
@@ -83,7 +82,7 @@ in the triple is the return value of the program, here corresponding to
 Alternatively you can emit a desugared AST (see the book) by using the `desugar` command:
 
 ~~~bash
-lein run desugar -i programs/arithmetic_circuit.daphne -o output.json
+clj -M:run desugar -i programs/arithmetic_circuit.daphne -o output.json
 ~~~
 
 ~~~javascript
@@ -116,7 +115,7 @@ To create a Python class instead of a JSON graphical model you can use the
 `python-class` command,
 
 ~~~bash
-lein run python-class -i programs/arithmetic_circuit.daphne -o autogen_arithmetic_circuit.py
+clj -M:run python-class -i programs/arithmetic_circuit.daphne -o autogen_arithmetic_circuit.py
 ~~~
 
 Note that we have prepended `autogen_` here, which is necessary to distinguish
@@ -134,10 +133,10 @@ and check for `hy2py` on your path. The Python dependencies are documented in
 To export to CUDA you can run the following command
 
 ~~~bash
-lein run cuda -i programs/arithmetic_circuit.daphne -o arithmetic_circuit.cu
+clj -M:run cuda -i programs/arithmetic_circuit.daphne -o arithmetic_circuit.cu
 ~~~
 
-You can then compile the code if you have the CUDA compiler nvcc installed with
+If you have the CUDA compiler nvcc installed you can then compile with
 
 ~~~bash
 nvcc -o arithmetic_circuit arithmetic_circuit.cu
@@ -149,7 +148,7 @@ and run it to draw 10 samples
 ./arithmetic_circuit 10
 ~~~
 
-This will print 10 samples and the log probabilities for each observe statements. If you want to use the data in a different format you can edit [main.cu](resources/cuda/main.cu) to handle IO differently, e.g. with JSON or torch export.
+This will print 10 times value for all sample statements and the log probabilities for each observe statement. If you want to use the data in a different format you can edit [main.cu](resources/cuda/main.cu) to handle IO differently, e.g. torch export.
 
 ### Continuous Normalizing Flow training
 
@@ -244,10 +243,3 @@ paper](https://github.com/mlresearch/v108/tree/gh-pages/weilbach20a)
   bibsource = {dblp computer science bibliography, https://dblp.org}
 }
 ~~~
-
-## TODO
-
-- add convolution code
-- provide sacred local filesystem loader for the plot routines
-- provide plotting code for deconvolution figure
-

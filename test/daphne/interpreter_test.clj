@@ -1,5 +1,5 @@
 (ns daphne.interpreter-test
-  (:refer-clojure :exclude [eval])
+  (:refer-clojure :exclude [eval abs])
   (:require  [clojure.test :refer [deftest testing is]]
              [anglican.stat :refer [empirical-expectation]]
              [anglican.emit :refer [query]]
