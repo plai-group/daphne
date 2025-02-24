@@ -16,7 +16,9 @@
             [daphne.hoppl-cps :refer [hoppl-cps]]
             [daphne.metropolis-within-gibbs :refer [metropolis-within-gibbs]]
             [daphne.hmc :refer [hmc]]
-            [daphne.core :refer [program->graph]])
+            [daphne.core :refer [program->graph]]
+            [daphne.factor-graph :refer [source-code-transformation graph->factor-graph reformat-factor-graph remove-cruft]]
+            )
   (:import [java.io PushbackReader StringReader])
   (:gen-class))
 
@@ -39,6 +41,7 @@
         "  python-class  Create a Python class with sample and log probability methods for the program"
         "  cuda          Compile the program to CUDA code"
         "  infer         Run inference on the program"
+        "  factor-graph  Compile the program to a factor graph"
         ""
         "Please refer to the manual page for more information."]
        (str/join \newline)))
@@ -48,7 +51,7 @@
        (str/join \newline errors)))
 
 (def actions #{"graph" "desugar" "desugar-hoppl" "desugar-hoppl-noaddress" "desugar-hoppl-cps"
-              "python-class" "infer" "cuda"})
+              "python-class" "infer" "cuda" "factor-graph"})
 
 (def cli-options
   ;; An option with a required argument
@@ -158,6 +161,7 @@
                               (symbol (str s f))))]
       (case action
         :graph (-> code program->graph desugar-datastructures-graph)
+        :factor-graph (-> code source-code-transformation program->graph desugar-datastructures-graph graph->factor-graph remove-cruft)
         :desugar (-> code desugar desugar-datastructures)
         :desugar-hoppl (list
                         'fn ['alpha]

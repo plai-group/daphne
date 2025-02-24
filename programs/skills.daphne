@@ -1,0 +1,8 @@
+(let [s1 (sample (normal 0 1.0))
+      s2 (sample (normal 0 1.0))
+      delta (- s1 s2)
+      epsilon 0.1
+      w (> delta epsilon)
+      y true]  
+(observe (dirac w) y)
+[s1 s2])
