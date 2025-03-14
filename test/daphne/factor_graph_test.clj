@@ -128,8 +128,6 @@
   (testing "source-code transformation wraps deterministic subexpressions correctly"
     (let [actual (first (source-code-transformation [prog-1]))
           expected (desugar-let expected-transformed-prog-1)]
-      (println "actual:")
-      (println actual)
       (is (= (strip-dontcare-numbers actual)
              (strip-dontcare-numbers expected))))))
 
