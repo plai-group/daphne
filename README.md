@@ -1,5 +1,7 @@
 # Daphne
 
+> Named after Daphne, the naiad nymph from Greek mythology who transformed into a laurel tree to escape Apollo. Like the mythological transformation that preserved Daphne's essence while changing her form, our compiler transforms probabilistic programs into graphical models of probability flows while preserving their semantic meaning. As water nymphs direct the flow of rivers and streams, our Daphne system guides the flow of probability distributions through transformations that preserve their fundamental properties while enabling efficient inference and representation.
+
 This project provides the `daphne` probabilistic programming compiler. It is
 built closely following the book [An Introduction to Probabilistic
 Programming](https://arxiv.org/abs/1809.10756). 
