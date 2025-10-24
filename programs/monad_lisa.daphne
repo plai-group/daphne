@@ -1,0 +1,76 @@
+(defn reduce [f acc s]
+  (if (> (count s) 0)
+    (reduce f (f acc (first s)) (rest s))
+    acc))
+
+(defn sigmoid [x]
+  (/ 1.0 (+ 1.0 (exp (- x)))))
+
+(defn process-transaction [risk-acc txn-data]
+  (let [user-risk (first risk-acc)
+        merchant-risk (second risk-acc)
+        device-risk (nth risk-acc 2)
+        fraud-count (nth risk-acc 3)
+        
+        ;; Extract transaction features and observed signals
+        amount (first txn-data)
+        observed-typing (second txn-data)
+        observed-vpn (nth txn-data 2)
+        
+        ;; Compute fraud probability from risk factors + transaction amount
+        ;; Higher amounts and higher risks increase fraud probability
+        amount-effect (* 0.01 (- amount 100.0))
+        base-fraud-prob (+ (* 0.4 user-risk) 
+                          (* 0.4 merchant-risk) 
+                          (* 0.2 device-risk) 
+                          amount-effect 
+                          -0.4)
+        fraud-prob (sigmoid (* 5.0 base-fraud-prob))
+        
+        ;; Latent: is this transaction fraudulent?
+        is-fraud (sample (bernoulli fraud-prob))
+        
+        ;; Behavioral signals depend on whether it's fraud
+        ;; Fraudsters: fast typing (bots), high VPN usage
+        ;; Legitimate: normal typing, low VPN usage
+        typing-speed (if is-fraud 
+                        (sample (normal 2.5 0.3))  ;; Fast automated typing
+                        (sample (normal 1.0 0.3))) ;; Normal human typing
+        
+        vpn-score (if is-fraud
+                     (sample (beta 8 2))   ;; High VPN probability (hiding)
+                     (sample (beta 2 8)))] ;; Low VPN probability (normal)
+    
+    ;; Observe the behavioral signals with measurement noise
+    (observe (normal typing-speed 0.2) observed-typing)
+    (observe (beta 10 10) observed-vpn)
+    
+    ;; Return accumulator with fraud count
+    [user-risk merchant-risk device-risk (+ fraud-count (if is-fraud 1 0))]))
+
+;; Monad Lisa's Smile: Detecting art forgeries through functional composition
+;; (Because fraud detection is just composing probability monads!)
+
+(let [;; Latent risk profiles (what we want to infer from behavior)
+      user-risk (sample (beta 2 8))        ;; Most users legitimate (~20% risk)
+      merchant-risk (sample (beta 1 20))   ;; Most merchants honest (~5% risk)
+      device-risk (sample (beta 1 50))     ;; Most devices safe (~2% risk)
+      
+      ;; Transaction data: [amount, observed-typing-speed, observed-vpn-score]
+      ;; First few transactions: normal behavior
+      ;; Later transactions: suspicious behavior (fraud!)
+      transactions [[50.0   0.95  0.15]    ;; Normal: small amount, normal typing, low VPN
+                    [80.0   1.05  0.20]    ;; Normal
+                    [120.0  1.10  0.18]    ;; Normal, slightly larger
+                    [500.0  2.6   0.80]    ;; SUSPICIOUS: large amount, fast typing, high VPN
+                    [750.0  2.8   0.85]]   ;; FRAUD: very large, automated, VPN
+      
+      ;; Process all transactions with shared risk profiles
+      result (reduce process-transaction 
+                     [user-risk merchant-risk device-risk 0] 
+                     transactions)
+      
+      fraud-count (nth result 3)]
+  
+  ;; Return inferred risk profiles and estimated fraud count
+  [user-risk merchant-risk device-risk fraud-count])

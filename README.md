@@ -152,6 +152,78 @@ and run it to draw 10 samples
 
 This will print 10 times value for all sample statements and the log probabilities for each observe statement. If you want to use the data in a different format you can edit [main.cu](resources/cuda/main.cu) to handle IO differently, e.g. torch export.
 
+### GSDM (Graphically Structured Diffusion Model) Export
+
+To compile a Daphne program to a PyTorch dataset class compatible with the GSDM framework for amortized inference, use the `gsdm` command:
+
+~~~bash
+clj -M:run gsdm -i programs/monad_lisa.daphne -o monad_lisa_dataset.py
+~~~
+
+This generates a Python class that:
+- Implements the forward generative model as PyTorch code
+- Extracts the graph structure for sparse attention
+- Provides sampling and observation handling
+- Enables training graph neural networks for fast inference
+
+Example Monad Lisa program (`programs/monad_lisa.daphne`):
+
+~~~clojure
+(defn process-transaction [risk-acc txn-data]
+  (let [user-risk (first risk-acc)
+        merchant-risk (second risk-acc)
+        device-risk (nth risk-acc 2)
+        
+        ;; Extract observed signals
+        amount (first txn-data)
+        observed-typing (second txn-data)
+        observed-vpn (nth txn-data 2)
+        
+        ;; Compute fraud probability
+        fraud-prob (sigmoid (+ (* 0.4 user-risk) 
+                              (* 0.4 merchant-risk) 
+                              (* 0.2 device-risk)))
+        is-fraud (sample (bernoulli fraud-prob))
+        
+        ;; Behavioral signals depend on fraud
+        typing-speed (if is-fraud 
+                        (sample (normal 2.5 0.3))
+                        (sample (normal 1.0 0.3)))
+        vpn-score (if is-fraud
+                     (sample (beta 8 2))
+                     (sample (beta 2 8)))]
+    
+    (observe (normal typing-speed 0.2) observed-typing)
+    (observe (beta 10 10) observed-vpn)
+    
+    [user-risk merchant-risk device-risk (+ fraud-count (if is-fraud 1 0))]))
+
+;; Process multiple transactions with shared risk profiles
+(let [user-risk (sample (beta 2 8))
+      merchant-risk (sample (beta 1 20))
+      device-risk (sample (beta 1 50))
+      
+      transactions [[50.0  0.95 0.15]
+                    [500.0 2.6  0.80]
+                    [750.0 2.8  0.85]]
+      
+      result (reduce process-transaction 
+                     [user-risk merchant-risk device-risk 0] 
+                     transactions)]
+  
+  [user-risk merchant-risk device-risk (nth result 3)])
+~~~
+
+The generated `monad_lisa_dataset.py` contains:
+- `MonadLisaDataset` class implementing `GraphicalDataset`
+- `run_simulator()` method with PyTorch distributions
+- Graph attention mask computed from dependencies
+- Variable space definitions for the neural network
+
+This demonstrates functional composition with `reduce` while maintaining shared latent variables across observations - a key pattern for real-world probabilistic programming applications like fraud detection, inventory optimization, and dynamic pricing.
+
+See `programs/MONAD_LISA_README.md` for a detailed explanation of the fraud detection model.
+
 ### Continuous Normalizing Flow training
 
 We can now use the provided Python files to train a neural network with

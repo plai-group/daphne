@@ -18,6 +18,7 @@
             [daphne.hmc :refer [hmc]]
             [daphne.core :refer [program->graph]]
             [daphne.factor-graph :refer [source-code-transformation graph->factor-graph reformat-factor-graph remove-cruft]]
+            [daphne.gsdm :refer [gsdm]]
             )
   (:import [java.io PushbackReader StringReader])
   (:gen-class))
@@ -39,6 +40,7 @@
         "  desugar-hoppl-noaddress Return a desugared HOPPL syntax object of the program without addresses"
         "  desugar-hoppl-cps       Return a desugared HOPPL syntax object in continuation passing style"
         "  python-class  Create a Python class with sample and log probability methods for the program"
+        "  gsdm          Compile the program to a GSDM dataset class for amortized inference"
         "  cuda          Compile the program to CUDA code"
         "  infer         Run inference on the program"
         "  factor-graph  Compile the program to a factor graph"
@@ -51,7 +53,7 @@
        (str/join \newline errors)))
 
 (def actions #{"graph" "desugar" "desugar-hoppl" "desugar-hoppl-noaddress" "desugar-hoppl-cps"
-              "python-class" "infer" "cuda" "factor-graph"})
+              "python-class" "gsdm" "infer" "cuda" "factor-graph"})
 
 (def cli-options
   ;; An option with a required argument
@@ -172,6 +174,7 @@
 
         :desugar-hoppl-noaddress (-> code desugar-hoppl-global)
         :python-class (foppl->python code)
+        :gsdm (gsdm code opts)
         :infer (infer code opts)
         :cuda (-> code program->graph second generate-cuda)))))
 
