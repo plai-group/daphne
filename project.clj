@@ -8,7 +8,7 @@
                  [org.clojure/core.memoize "1.0.257"]
 
                  [anglican "1.1.0"]
-                 [aysylu/loom "1.0.2"]
+                 [aysylu/loom "1.2.2"]
                  [org.clojure/core.match "1.0.0"]
                  ;; for hy emission
                  [backtick "0.3.4"]
